@@ -1,0 +1,13 @@
+name: CDC_R_shiny
+title: CDC_R_shiny
+username:
+account: mitkotak
+server: shinyapps.io
+hostUrl: https://api.shinyapps.io/v1
+appId: 8066961
+bundleId: 6748877
+url: https://mitkotak.shinyapps.io/CDC_R_shiny/
+when: 1674070078.17727
+lastSyncTime: 1674070078.17729
+asMultiple: FALSE
+asStatic: FALSE
