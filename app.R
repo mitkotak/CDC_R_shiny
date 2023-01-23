@@ -26,7 +26,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                              sidebarLayout(
                                sidebarPanel(
                                  tags$h3("Input Percent Mortality:"),
-                                 numericInput("MI", "Mortality in Test Bottle[%]:", value=NULL),
+                                 numericInput("MT", "Mortality in Test Bottle[%]:", value=NULL),
                                  numericInput("MC", "Mortality in Control Bottle[%]:", value=NULL),
                                  numericInput("Observation1", "Number of Observations", value=NULL),
                                  numericInput("Mortality1", "Total Mortality", value=NULL),
@@ -68,11 +68,15 @@ ui <- fluidPage(theme= shinytheme("yeti"),
 server <- function(input, output) {
   
   Abbott = reactive({
-    MI = inputSMT
-    MC = inputSMC
+    MT = input$MT
+    MC = input$MC
     equation = ((MT - MC) * 100)/(100 - MC)
     print(equation)
   })
+  
+      output$txtout = renderPrint({
+        Abbott()
+      })
   
   Mortality = reactive({
     req(input$file1)
@@ -104,6 +108,7 @@ server <- function(input, output) {
   
   Upload = reactive({
     req(input$file1)
+    inFile = input$file1
     df = read.csv(inFile$datapath, header = input$header, sep = input$sep, na.strings = input$missing)
     return (df)
   })
