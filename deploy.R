@@ -1,4 +1,11 @@
 library(rsconnect)
+library(shiny)
+library(shinythemes)
+library(reshape2)
+library(plyr)
+library(dplyr)
+library(plotly)
+
 # a function to stop the script when one of the variables cannot be found. and to strip quotation marks from the secrets when you supplied them. (maybe it is just easier to never use them)
 error_on_missing_name <- function(name){
 var <- Sys.getenv(name, unset=NA)
