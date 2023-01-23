@@ -8,6 +8,7 @@
 #
 
 library(shiny)
+install.packages('shinythemes')
 library(shinythemes)
 library(reshape2)
 library(plyr)
