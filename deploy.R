@@ -11,14 +11,11 @@ gsub("\"", '',var)
 setAccountInfo(name = error_on_missing_name("SHINY_ACC_NAME"),
 token = error_on_missing_name("TOKEN"),
 secret = error_on_missing_name("SECRET"))
-# Hard code Deploy
-
-deployApp(appName="~/home/shinyusr/app.R")
 
 # Deploy the application.
-#deployApp(
-#appFiles = c("app.R" #, you can specify which files to deploy, 
-#or keep this NULL to deploy everything
-#),
-#appName = error_on_missing_name("MASTERNAME"),
-#appTitle = "shinyapplication")
+deployApp(
+appFiles = c("app.R" #, you can specify which files to deploy, 
+or keep this NULL to deploy everything
+),
+appName = error_on_missing_name("MASTERNAME"),
+appTitle = "shinyapplication")
