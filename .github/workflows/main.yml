@@ -33,4 +33,3 @@ jobs:
           -e SECRET=${{secrets.SECRET}} 
           -e MASTERNAME=${{secrets.MASTER_NAME}} 
           main
-
