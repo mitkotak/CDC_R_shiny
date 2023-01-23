@@ -13,7 +13,7 @@ token = error_on_missing_name("TOKEN"),
 secret = error_on_missing_name("SECRET"))
 # Deploy the application.
 deployApp(
-appFiles = c("myapp.R" #, you can specify which files to deploy, 
+appFiles = c("shiny.R" #, you can specify which files to deploy, 
 #or keep this NULL to deploy everything
 ),
 appName = error_on_missing_name("MASTERNAME"),
