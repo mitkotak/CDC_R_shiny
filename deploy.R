@@ -14,8 +14,9 @@ secret = error_on_missing_name("SECRET"))
 
 # Deploy the application.
 deployApp(
-appFiles = c("app.R" #, you can specify which files to deploy, 
-or keep this NULL to deploy everything
-),
-appName = error_on_missing_name("MASTERNAME"),
-appTitle = "shinyapplication")
+          appFiles = c("app.R" #, you can specify which files to deploy, 
+                       #or keep this NULL to deploy everything
+                       ),
+          appName = error_on_missing_name("MASTERNAME"),
+          appTitle = "shinyapplication"
+)
