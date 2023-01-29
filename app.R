@@ -8,12 +8,24 @@
 #
 
 library(shiny)
-install.packages('shinythemes')
 library(shinythemes)
 library(reshape2)
 library(plyr)
 library(dplyr)
 library(plotly)
+library("shinyMatrix")
+m <- matrix(runif(12), 10, 12, dimnames = list(NULL, c("Bottle 1M Alive",
+                                                       "Bottle 1M Dead",
+                                                       "Bottle 2M Alive",
+                                                       "Bottle 2M Dead",
+                                                       "Bottle 3P Alive",
+                                                       "Bottle 3P Dead",
+                                                       "Bottle 4P Alive",
+                                                       "Bottle 4P Dead",
+                                                       "Total Dead",
+                                                       "Total %",
+                                                       "Control Alive",
+                                                       "Control Dead")))
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme= shinytheme("yeti"),
@@ -32,7 +44,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                  numericInput("Observation1", "Number of Observations", value=NULL),
                                  numericInput("Mortality1", "Total Mortality", value=NULL),
                                ), #sidebarPanel
-                               mainPanel( textOutput("txtout")))),
+                               mainPanel( tableOutput("contents")))),
                     tabPanel("Data Upload", "Data Input", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
@@ -60,8 +72,17 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                  uiOutput("checkbox2"),
                                  downloadButton("down1", "Download Plot")),
                                mainPanel(plotlyOutput("density")),
-                             position=c("left")),
-                    )
+                             position=c("left"))),
+                    tabPanel("Matrix Input", fluid=TRUE,
+                             sidebarLayout(
+                               sidebarPanel(
+                                 tags$h3("Data"),
+                                 matrixInput("sample",
+                                             value=m,
+                                             rows=list(extend= TRUE),
+                                             cols=list(names=TRUE))
+                               ),
+                               mainPanel( textOutput("txtout"))))
                 ))
                     )
 
