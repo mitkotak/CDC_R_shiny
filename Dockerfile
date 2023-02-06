@@ -1,4 +1,5 @@
 FROM rocker/shiny:latest
+RUN install2.r shinyMatrix
 RUN install2.r rsconnect
 RUN install2.r shinythemes
 RUN install2.r reshape2
