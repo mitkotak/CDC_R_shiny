@@ -14,17 +14,41 @@ library(plyr)
 library(dplyr)
 library(plotly)
 library("shinyMatrix")
-m <- matrix(runif(12), 10, 12, dimnames = list(NULL, c("Bottle 1M Alive",
-                                                       "Bottle 1M Dead",
-                                                       "Bottle 2M Alive",
+library(DT)
+library(tibble)
+
+
+###function for deleting the rows
+splitColumn <- function(data, column_name) {
+  newColNames <- c("Unmerged_type1", "Unmerged_type2")
+  newCols <- colsplit(data[[column_name]], " ", newColNames)
+  after_merge <- cbind(data, newCols)
+  after_merge[[column_name]] <- NULL
+  after_merge
+}
+
+###_______________________________________________
+### function for inserting a new column
+
+fillvalues <- function(data, values, columName){
+  df_fill <- data
+  vec <- strsplit(values, ",")[[1]]
+  df_fill <- tibble::add_column(df_fill, newcolumn = vec, .after = columName)
+  df_fill
+}
+
+##function for removing the column
+
+removecolumn <- function(df, nameofthecolumn){
+  df[ , -which(names(df) %in% nameofthecolumn)]
+}
+
+
+m <- matrix(runif(6), 10, 6, dimnames = list(NULL, c("Bottle 1M Dead",
                                                        "Bottle 2M Dead",
-                                                       "Bottle 3P Alive",
                                                        "Bottle 3P Dead",
-                                                       "Bottle 4P Alive",
                                                        "Bottle 4P Dead",
                                                        "Total Dead",
-                                                       "Total %",
-                                                       "Control Alive",
                                                        "Control Dead")))
 
 # Define UI for application that draws a histogram
@@ -35,6 +59,21 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                   # correct mortality = ((mortality in test bottles[%] - mortality in control bottle[%]))*100)
                   # /(100% - mortality in control bottle[%])
                   tabsetPanel(
+                    tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
+                             sidebarLayout(
+                               sidebarPanel(
+                                 fileInput("file1", "Choose CSV File", accept = ".csv"),
+                                 checkboxInput("header", "Header", TRUE),
+                                 actionButton("Splitcolumn", "SplitColumn"),
+                                 uiOutput("selectUI"),
+                                 actionButton("deleteRows", "Delete Rows"),
+                                 textInput("textbox", label="Input the value to replace:"),
+                                 actionButton("replacevalues", label = 'Replace values'),
+                                 actionButton("removecolumn", "Remove Column"),
+                                 actionButton("Undo", 'Undo')
+                               ),
+                               mainPanel(
+                                 DTOutput("table1")))),
                     tabPanel("Abott Formula Calculator", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
@@ -76,6 +115,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                     tabPanel("Matrix Input", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
+                                 width=6,
                                  tags$h3("Data"),
                                  matrixInput("sample",
                                              value=m,
@@ -87,7 +127,66 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                     )
 
 # Define server function
-server <- function(input, output) {
+server <- function(session, input, output) {
+  rv <- reactiveValues(data = insecticide_data , orig=insecticide_data)
+  
+  output$table1 <- renderDT({
+    datatable(rv$data, editable = TRUE)
+  })
+
+  observeEvent(input$file1, {
+    file <- input$file1
+    ext <- tools::file_ext(file$datapath)
+    
+    req(file)
+    
+    validate(need(ext == "csv", "Please upload a csv file"))
+    
+    rv$orig <- read.csv(file$datapath, header = input$header, )
+    rv$data <- rv$orig
+  })
+  
+  output$selectUI<-renderUI({
+    req(rv$data)
+    selectInput(inputId='selectcolumn', label='select column', choices = names(rv$data))
+  })
+  
+  #splitcolumn
+  observeEvent(input$Splitcolumn, {
+    rv$data <- splitColumn(rv$data, input$selectcolumn)
+  })
+  
+  #delterows
+  observeEvent(input$deleteRows,{
+    if (!is.null(input$table1_rows_selected)) {
+      rv$data <- rv$data[-as.numeric(input$table1_rows_selected),]
+    }
+  })
+  
+  
+  # renderDT ----------------------------------------------------------------
+  
+  output$table1 <- renderDT({
+    datatable(rv$data, editable = TRUE)
+  })
+  
+  observeEvent(input$table1_cell_edit, {
+    row  <- input$table1_cell_edit$row
+    clmn <- input$table1_cell_edit$col
+    rv$data[row, clmn] <- input$table1_cell_edit$value
+  })
+  
+  
+  observeEvent(input$replacevalues, {
+    rv$data <- fillvalues(rv$data, input$textbox, input$selectcolumn)
+  })
+  observeEvent(input$removecolumn, {
+    rv$data <- removecolumn(rv$data,input$selectcolumn)
+  })
+  observeEvent(input$Undo, {
+    rv$data <- rv$orig
+  })
+
   
   Abbott = reactive({
     MT = input$MT
@@ -138,6 +237,7 @@ server <- function(input, output) {
   output$contents = renderTable({
     Upload()
   })
+
 } #server
 
 # Run the application 

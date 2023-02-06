@@ -5,6 +5,8 @@ RUN install2.r reshape2
 RUN install2.r plyr
 RUN install2.r dplyr
 RUN install2.r plotly
+RUN install2.r tibble
+RUN install2.r DT
 WORKDIR /home/shinyusr
 COPY app.R app.R 
 COPY deploy.R deploy.R
