@@ -62,6 +62,21 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                   # correct mortality = ((mortality in test bottles[%] - mortality in control bottle[%]))*100)
                   # /(100% - mortality in control bottle[%])
                   tabsetPanel(
+                    tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
+                             sidebarLayout(
+                               sidebarPanel(
+                                 fileInput("file1", "Choose CSV File", accept = ".csv"),
+                                 checkboxInput("header", "Header", TRUE),
+                                 actionButton("Splitcolumn", "SplitColumn"),
+                                 uiOutput("selectUI"),
+                                 actionButton("deleteRows", "Delete Rows"),
+                                 textInput("textbox", label="Input the value to replace:"),
+                                 actionButton("replacevalues", label = 'Replace values'),
+                                 actionButton("removecolumn", "Remove Column"),
+                                 actionButton("Undo", 'Undo')
+                               ),
+                               mainPanel(
+                                 DTOutput("table1")))),
                     tabPanel("Abott Formula Calculator", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
@@ -101,21 +116,6 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                  downloadButton("down1", "Download Plot")),
                                mainPanel(plotlyOutput("density")),
                              position=c("left"))),
-                    tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
-                             sidebarLayout(
-                               sidebarPanel(
-                                 fileInput("file1", "Choose CSV File", accept = ".csv"),
-                                 checkboxInput("header", "Header", TRUE),
-                                 actionButton("Splitcolumn", "SplitColumn"),
-                                 uiOutput("selectUI"),
-                                 actionButton("deleteRows", "Delete Rows"),
-                                 textInput("textbox", label="Input the value to replace:"),
-                                 actionButton("replacevalues", label = 'Replace values'),
-                                 actionButton("removecolumn", "Remove Column"),
-                                 actionButton("Undo", 'Undo')
-                               ),
-                               mainPanel(
-                                 DTOutput("table1")))),
                 ))
                     )
 
