@@ -44,12 +44,15 @@ removecolumn <- function(df, nameofthecolumn){
 }
 
 
-m <- matrix(runif(6), 10, 6, dimnames = list(NULL, c("Bottle 1M Dead",
+m <- matrix(runif(7), 11, 7, dimnames = list(NULL, c("Time",
+                                                       "Bottle 1M Dead",
                                                        "Bottle 2M Dead",
                                                        "Bottle 3P Dead",
                                                        "Bottle 4P Dead",
                                                        "Total Dead",
                                                        "Control Dead")))
+print(m[,1])
+m[,1] = c(0,5,10,15,30,45,60,75,90,105,120)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme= shinytheme("yeti"),
@@ -59,31 +62,17 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                   # correct mortality = ((mortality in test bottles[%] - mortality in control bottle[%]))*100)
                   # /(100% - mortality in control bottle[%])
                   tabsetPanel(
-                    tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
-                             sidebarLayout(
-                               sidebarPanel(
-                                 fileInput("file1", "Choose CSV File", accept = ".csv"),
-                                 checkboxInput("header", "Header", TRUE),
-                                 actionButton("Splitcolumn", "SplitColumn"),
-                                 uiOutput("selectUI"),
-                                 actionButton("deleteRows", "Delete Rows"),
-                                 textInput("textbox", label="Input the value to replace:"),
-                                 actionButton("replacevalues", label = 'Replace values'),
-                                 actionButton("removecolumn", "Remove Column"),
-                                 actionButton("Undo", 'Undo')
-                               ),
-                               mainPanel(
-                                 DTOutput("table1")))),
                     tabPanel("Abott Formula Calculator", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
-                                 tags$h3("Input Percent Mortality:"),
-                                 numericInput("MT", "Mortality in Test Bottle[%]:", value=NULL),
-                                 numericInput("MC", "Mortality in Control Bottle[%]:", value=NULL),
-                                 numericInput("Observation1", "Number of Observations", value=NULL),
-                                 numericInput("Mortality1", "Total Mortality", value=NULL),
-                               ), #sidebarPanel
-                               mainPanel( tableOutput("contents")))),
+                                 width=7,
+                                 tags$h3("Data"),
+                                 matrixInput("sample",
+                                             value=m,
+                                             rows=list(extend= TRUE),
+                                             cols=list(names=TRUE))
+                               ),
+                               mainPanel( textOutput("txtout")))),
                     tabPanel("Data Upload", "Data Input", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
@@ -112,27 +101,40 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                  downloadButton("down1", "Download Plot")),
                                mainPanel(plotlyOutput("density")),
                              position=c("left"))),
-                    tabPanel("Matrix Input", fluid=TRUE,
+                    tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
-                                 width=6,
-                                 tags$h3("Data"),
-                                 matrixInput("sample",
-                                             value=m,
-                                             rows=list(extend= TRUE),
-                                             cols=list(names=TRUE))
+                                 fileInput("file1", "Choose CSV File", accept = ".csv"),
+                                 checkboxInput("header", "Header", TRUE),
+                                 actionButton("Splitcolumn", "SplitColumn"),
+                                 uiOutput("selectUI"),
+                                 actionButton("deleteRows", "Delete Rows"),
+                                 textInput("textbox", label="Input the value to replace:"),
+                                 actionButton("replacevalues", label = 'Replace values'),
+                                 actionButton("removecolumn", "Remove Column"),
+                                 actionButton("Undo", 'Undo')
                                ),
-                               mainPanel( textOutput("txtout"))))
+                               mainPanel(
+                                 DTOutput("table1")))),
                 ))
                     )
 
 # Define server function
 server <- function(session, input, output) {
+  library(tidyverse)
+  insecticide_data <- read_table("Type  Conc.  Ae.aegypti  Ae.albopictus Cx.pipiens Cx.quinquefasciatus  Cx.tarsalis
+  Chlorpyrifos  20  45  45  90  45  60
+  Deltamethrin  0.75  30  30  45  60  -
+  Etofenprox  12.5  15  30  15  30  60
+  Fenthion  800  -  -  75  45  45  45
+  Malathion  400  15  30  45  45  45
+  Naled  2.25  30  30  45  45  45
+  Permethrin  43  10  10  30  30  30
+  Prallethrin  0.05  -  -  60  60  -
+  Pyrethrum  15  15  30  45  45  30
+  Sumethrin  20  10  45  30  45  30 ")
+
   rv <- reactiveValues(data = insecticide_data , orig=insecticide_data)
-  
-  output$table1 <- renderDT({
-    datatable(rv$data, editable = TRUE)
-  })
 
   observeEvent(input$file1, {
     file <- input$file1
@@ -186,18 +188,15 @@ server <- function(session, input, output) {
   observeEvent(input$Undo, {
     rv$data <- rv$orig
   })
-
   
   Abbott = reactive({
-    MT = input$MT
-    MC = input$MC
-    equation = ((MT - MC) * 100)/(100 - MC)
-    print(equation)
+    sample = input$sample
+    print(sample)
   })
   
-      output$txtout = renderPrint({
-        Abbott()
-      })
+  output$txtout = renderPrint({
+    Abbott()
+  })
   
   Mortality = reactive({
     req(input$file1)
