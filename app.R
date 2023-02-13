@@ -51,7 +51,7 @@ m <- matrix(runif(7), 11, 7, dimnames = list(NULL, c("Time",
                                                        "Bottle 4P Dead",
                                                        "Total Dead",
                                                        "Control Dead")))
-print(m[,1])
+
 m[,1] = c(0,5,10,15,30,45,60,75,90,105,120)
 
 # Define UI for application that draws a histogram
@@ -188,6 +188,8 @@ server <- function(session, input, output) {
   observeEvent(input$Undo, {
     rv$data <- rv$orig
   })
+  
+  # Abott ----------------------------------------------------------------
   
   Abbott = reactive({
     sample = input$sample
