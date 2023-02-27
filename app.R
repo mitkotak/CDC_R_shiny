@@ -44,14 +44,19 @@ removecolumn <- function(df, nameofthecolumn){
 }
 
 
-m <- matrix(runif(6), 11, 6, dimnames = list(NULL, c("Time",
+m <- matrix(runif(6), 15, 6, dimnames = list(NULL, c("Time",
                                                        "Bottle 1M Dead",
                                                        "Bottle 2M Dead",
                                                        "Bottle 3P Dead",
                                                        "Bottle 4P Dead",
                                                        "Control Dead")))
 
-m[,1] = c(0,5,10,15,30,45,60,75,90,105,120)
+m[,1] = c(0,5,10,15,20,25,30,35,40,45,60,75,90,105,120)
+m[,2] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
+m[,3] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
+m[,4] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
+m[,5] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
+m[,6] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
 
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme= shinytheme("yeti"),
@@ -193,27 +198,27 @@ server <- function(session, input, output) {
   
   Abbott = reactive({
     sample = input$sample
-    dead_0 = sample[1,2] + sample[1,3] + sample[1,4] + sample[1,5]
-    dead_5 = sample[2,2] + sample[2,3] + sample[2,4] + sample[2,5]
-    dead_10 = sample[3,2] + sample[3,3] + sample[3,4] + sample[3,5]
-    dead_15 = sample[4,2] + sample[4,3] + sample[4,4] + sample[4,5]
-    dead_30 = sample[5,2] + sample[5,3] + sample[5,4] + sample[5,5]
-    dead_45 = sample[6,2] + sample[6,3] + sample[6,4] + sample[6,5]
-    dead_60 = sample[7,2] + sample[7,3] + sample[7,4] + sample[7,5]
-    dead_75 = sample[8,2] + sample[8,3] + sample[8,4] + sample[8,5]
-    dead_90 = sample[9,2] + sample[9,3] + sample[9,4] + sample[9,5]
-    dead_105 = sample[10,2] + sample[10,3] + sample[10,4] + sample[10,5]
-    dead_120 = sample[11,2] + sample[11,3] + sample[11,4] + sample[11,5]
     b1m_dead = sample[1,2] + sample[2,2] + sample[3,2] + sample[4,2] + sample[5,2] + sample[6,2] + sample[7,2] + sample[8,2] + sample[9,2] + sample[10,2] + sample[11,2]
     b2m_dead = sample[1,3] + sample[2,3] + sample[3,3] + sample[4,3] + sample[5,3] + sample[6,3] + sample[7,3] + sample[8,3] + sample[9,3] + sample[10,3] + sample[11,3]
     b3p_dead = sample[1,4] + sample[2,4] + sample[3,4] + sample[4,4] + sample[5,4] + sample[6,4] + sample[7,4] + sample[8,4] + sample[9,4] + sample[10,4] + sample[11,4]
     b4p_dead = sample[1,5] + sample[2,5] + sample[3,5] + sample[4,5] + sample[5,5] + sample[6,5] + sample[7,5] + sample[8,5] + sample[9,5] + sample[10,5] + sample[11,5]
     total_dead = b1m_dead + b2m_dead + b3p_dead + b4p_dead
-    percent =  - c(dead_0/(total_dead-dead_0), dead_5/(total_dead-dead_5), dead_10/(total_dead-dead_10), dead_15/(total_dead-dead_15), dead_30/(total_dead-dead_30), dead_45/(total_dead-dead_45), dead_60/(total_dead-dead_60), dead_75/(total_dead-dead_75), dead_90/(total_dead-dead_90), dead_105/(total_dead-dead_105), dead_120/(total_dead-dead_120))
-    time = c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1])
-    df <- data.frame(time,percent)
-    graph1 = ggplot(df, aes(x = time, y = percent, group = 1)) + 
-      geom_line(col='red') + 
+    Mortality = 100*c(1/((total_dead/sample[1,2] + sample[1,3] + sample[1,4] + sample[1,5])-1),
+                1/((total_dead/sample[2,2] + sample[2,3] + sample[2,4] + sample[2,5])-1),
+                1/((total_dead/sample[2,2] + sample[2,3] + sample[2,4] + sample[2,5])-1),
+                1/((total_dead/sample[4,2] + sample[4,3] + sample[4,4] + sample[4,5])-1),
+                1/((total_dead/sample[5,2] + sample[5,3] + sample[5,4] + sample[5,5])-1),
+                1/((total_dead/sample[6,2] + sample[6,3] + sample[6,4] + sample[6,5])-1),
+                1/((total_dead/sample[7,2] + sample[7,3] + sample[7,4] + sample[7,5])-1),
+                1/((total_dead/sample[8,2] + sample[8,3] + sample[8,4] + sample[8,5])-1),
+                1/((total_dead/sample[9,2] + sample[9,3] + sample[9,4] + sample[9,5])-1),
+                1/((total_dead/sample[10,2] + sample[10,3] + sample[10,4] + sample[10,5])-1),
+                1/((total_dead/sample[11,2] + sample[11,3] + sample[11,4] + sample[11,5])-1))
+    Time = c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1])
+    df <- data.frame(Time,Mortality)
+    graph1 = ggplot(df, aes(x = Time, y = Mortality, group = 1)) + 
+      geom_line(col='red') +
+      
       geom_smooth(method=lm, level=0.80)
     #graph1 = plot(time, percent, type = "b", pch = 19, col = "red", xlab = "Time (min)", ylab = "Percent Mortality")
     print(graph1)
