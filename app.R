@@ -66,6 +66,23 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                   # correct mortality = ((mortality in test bottles[%] - mortality in control bottle[%]))*100)
                   # /(100% - mortality in control bottle[%])
                   tabsetPanel(
+                    tabPanel("Abott Formula Calculator", fluid=TRUE,
+                             sidebarLayout(
+                               sidebarPanel(
+                                 position="left",
+                                 width=4,
+                                 tags$h3("Data"),
+                                 matrixInput("sample",
+                                             value=m,
+                                             rows=list(extend= TRUE),
+                                             cols=list(names=TRUE),
+                                             class='numeric')
+                               ),
+                               sidebarPanel(
+                                 position="right",
+                                 width=8,
+                                 tags$h3("Resistance Plots"),
+                                 plotOutput("plot")))),
                     tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
@@ -81,46 +98,34 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                ),
                                mainPanel(
                                  DTOutput("table1")))),
-                    tabPanel("Abott Formula Calculator", fluid=TRUE,
-                             sidebarLayout(
-                               sidebarPanel(
-                                 width=6,
-                                 tags$h3("Data"),
-                                 matrixInput("sample",
-                                             value=m,
-                                             rows=list(extend= TRUE),
-                                             cols=list(names=TRUE),
-                                             class='numeric')
-                               ),
-                               sidebarPanel(plotOutput("plot")))),
-                    tabPanel("Data Upload", "Data Input", fluid=TRUE,
-                             sidebarLayout(
-                               sidebarPanel(
-                                 fileInput('file1', 'CSV File', accept= c('test/csv', 'text,comma-separated-values,text/plain', ' .csv')),
-                                 radioButtons('sep', 'Separator', c(Comma=',',Semicolon=';', Tab='\t'),','),
-                                 textInput("missing", "Missing Value Designator", value=NULL),
-                                 checkboxInput('header', 'Header', TRUE),
-                                 checkboxInput('show', 'Show all Rows', TRUE)),
-                                 #numericInput("Variable1", "Mortality in Test Bottle[%]:", value=NULL),
-                                 #numericInput("Variable2", "Mortality in Control Bottle[%]:", value=NULL),
-                               mainPanel(tableOutput("contents"))),
-                              position=c("left")),
-                    
-                    tabPanel("Statistics", fluid=TRUE,
-                             sidebarLayout(
-                               sidebarPanel(
-                                 actionButton("stat", "Run Analysis"),
-                                 downloadButton("down3", "Download Table")),
-                               mainPanel(tableOutput("results"))),
-                             position=c("left")),
-                    
-                    tabPanel("Density Plots", fluid=TRUE,
-                             sidebarLayout(
-                               sidebarPanel(
-                                 uiOutput("checkbox2"),
-                                 downloadButton("down1", "Download Plot")),
-                               mainPanel(plotlyOutput("density")),
-                             position=c("left"))),
+                    # tabPanel("Data Upload", "Data Input", fluid=TRUE,
+                    #          sidebarLayout(
+                    #            sidebarPanel(
+                    #              fileInput('file1', 'CSV File', accept= c('test/csv', 'text,comma-separated-values,text/plain', ' .csv')),
+                    #              radioButtons('sep', 'Separator', c(Comma=',',Semicolon=';', Tab='\t'),','),
+                    #              textInput("missing", "Missing Value Designator", value=NULL),
+                    #              checkboxInput('header', 'Header', TRUE),
+                    #              checkboxInput('show', 'Show all Rows', TRUE)),
+                    #              #numericInput("Variable1", "Mortality in Test Bottle[%]:", value=NULL),
+                    #              #numericInput("Variable2", "Mortality in Control Bottle[%]:", value=NULL),
+                    #            mainPanel(tableOutput("contents"))),
+                    #           position=c("left")),
+                    # 
+                    # tabPanel("Statistics", fluid=TRUE,
+                    #          sidebarLayout(
+                    #            sidebarPanel(
+                    #              actionButton("stat", "Run Analysis"),
+                    #              downloadButton("down3", "Download Table")),
+                    #            mainPanel(tableOutput("results"))),
+                    #          position=c("left")),
+                    # 
+                    # tabPanel("Density Plots", fluid=TRUE,
+                    #          sidebarLayout(
+                    #            sidebarPanel(
+                    #              uiOutput("checkbox2"),
+                    #              downloadButton("down1", "Download Plot")),
+                    #            mainPanel(plotlyOutput("density")),
+                    #          position=c("left"))),
                 ))
                     )
 
@@ -198,28 +203,45 @@ server <- function(session, input, output) {
   
   Abbott = reactive({
     sample = input$sample
-    b1m_dead = sample[1,2] + sample[2,2] + sample[3,2] + sample[4,2] + sample[5,2] + sample[6,2] + sample[7,2] + sample[8,2] + sample[9,2] + sample[10,2] + sample[11,2]
-    b2m_dead = sample[1,3] + sample[2,3] + sample[3,3] + sample[4,3] + sample[5,3] + sample[6,3] + sample[7,3] + sample[8,3] + sample[9,3] + sample[10,3] + sample[11,3]
-    b3p_dead = sample[1,4] + sample[2,4] + sample[3,4] + sample[4,4] + sample[5,4] + sample[6,4] + sample[7,4] + sample[8,4] + sample[9,4] + sample[10,4] + sample[11,4]
-    b4p_dead = sample[1,5] + sample[2,5] + sample[3,5] + sample[4,5] + sample[5,5] + sample[6,5] + sample[7,5] + sample[8,5] + sample[9,5] + sample[10,5] + sample[11,5]
-    total_dead = b1m_dead + b2m_dead + b3p_dead + b4p_dead
-    Mortality = 100*c(1/((total_dead/sample[1,2] + sample[1,3] + sample[1,4] + sample[1,5])-1),
-                1/((total_dead/sample[2,2] + sample[2,3] + sample[2,4] + sample[2,5])-1),
-                1/((total_dead/sample[2,2] + sample[2,3] + sample[2,4] + sample[2,5])-1),
-                1/((total_dead/sample[4,2] + sample[4,3] + sample[4,4] + sample[4,5])-1),
-                1/((total_dead/sample[5,2] + sample[5,3] + sample[5,4] + sample[5,5])-1),
-                1/((total_dead/sample[6,2] + sample[6,3] + sample[6,4] + sample[6,5])-1),
-                1/((total_dead/sample[7,2] + sample[7,3] + sample[7,4] + sample[7,5])-1),
-                1/((total_dead/sample[8,2] + sample[8,3] + sample[8,4] + sample[8,5])-1),
-                1/((total_dead/sample[9,2] + sample[9,3] + sample[9,4] + sample[9,5])-1),
-                1/((total_dead/sample[10,2] + sample[10,3] + sample[10,4] + sample[10,5])-1),
-                1/((total_dead/sample[11,2] + sample[11,3] + sample[11,4] + sample[11,5])-1))
-    Time = c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1])
-    df <- data.frame(Time,Mortality)
-    graph1 = ggplot(df, aes(x = Time, y = Mortality, group = 1)) + 
-      geom_line(col='red') +
-      
-      geom_smooth(method=lm, level=0.80)
+    col_sums = colSums(sample[, c(2,3,4,5)])
+    b1m_dead = col_sums[[1]]
+    b2m_dead = col_sums[[2]]
+    b3p_dead = col_sums[[3]]
+    b4p_dead = col_sums[[4]]
+    total_alive = b1m_dead + b2m_dead + b3p_dead + b4p_dead
+    row_sums = rowSums(sample[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), c(2,3,4,5)])
+    print(sample[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), c(2,3,4,5)])
+    print(row_sums)
+    Mortality_per = (100/total_alive)*c(
+                row_sums[1],
+                row_sums[2],
+                row_sums[3],
+                row_sums[4],
+                row_sums[5],
+                row_sums[6],
+                row_sums[7],
+                row_sums[8],
+                row_sums[9],
+                row_sums[10],
+                row_sums[11],
+                row_sums[12],
+                row_sums[13],
+                row_sums[14],
+                row_sums[15])
+    Time = c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1], sample[12,1], sample[13,1], sample[14,1], sample[15,1])
+    df <- data.frame(Time=Time,
+                     Mortality=Mortality_per,
+                     Resistance_Abolished=0.5*Time,
+                     Resistance_Partially_Abolished=Time^0.6,
+                     Resistance_Unaffected=(5*Time)/(Time+1))
+    df <- df %>% pivot_longer(cols=c('Mortality', 'Resistance_Abolished', 'Resistance_Partially_Abolished','Resistance_Unaffected'),
+                              names_to='resistances',
+                              values_to='Percent_Mortality')
+    graph1 = ggplot(df, aes(x = Time, y=Percent_Mortality)) +
+      geom_line(aes(color=resistances), linetype='twodash') +
+      scale_color_manual(name='Resistance_Types', labels=c('Observed', 'Resistance_Abolished', 'Resistance_Partially_Abolished', 'Resistance_Unaffected'),
+                         values=c('red', 'purple', 'steelblue', 'pink')) +
+      xlim(Time[1], Time[15])
     #graph1 = plot(time, percent, type = "b", pch = 19, col = "red", xlab = "Time (min)", ylab = "Percent Mortality")
     print(graph1)
     })
