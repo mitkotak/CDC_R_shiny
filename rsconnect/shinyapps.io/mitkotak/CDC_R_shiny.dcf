@@ -5,9 +5,9 @@ account: mitkotak
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8066961
-bundleId: 6952508
+bundleId: 7014813
 url: https://mitkotak.shinyapps.io/CDC_R_shiny/
-when: 1678723139.4322
-lastSyncTime: 1678723139.43222
+when: 1679942011.0426
+lastSyncTime: 1679942011.04262
 asMultiple: FALSE
 asStatic: FALSE
