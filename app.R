@@ -58,6 +58,14 @@ m[,4] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
 m[,5] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
 m[,6] = c(0,0,5,13,13,16,18,18,23,23,23,23,23,24,24)
 
+
+diagtimes = matrix(c(20, 45, 45, 90, 45, 60, 0.75, 30, 30, 45, 60, 0, 12.5, 15, 30, 15, 30, 60, 800, 0, 0, 75, 45,
+                     45, 400, 15, 30, 45, 45, 45, 2.25, 30, 30, 45, 45, 45, 43, 10, 10, 30, 30, 30, 0.05, 0, 0, 60, 60,
+                     0, 15, 15, 30, 45, 45, 30, 20, 10, 45, 30, 45, 30), 10, 6, byrow=TRUE)
+rownames(diagtimes) = c("Chlorpyrifos", "Deltamethrin", "Etofenprox", "Fenthion", "Malathion", "Naled", "Permethrin", "Prallethrin", "Pyrethrum", "Sumethrin")
+
+colnames(diagtimes)= c("Insecticide Conc.", "Ae. aegypti", "Ae. albopictus", "Cx. pipens", "Cx. quinquefasciatus", "Cx. tarsalis")
+
 # Define UI for application that draws a histogram
 ui <- fluidPage(theme= shinytheme("yeti"),
                 navbarPage(
@@ -67,10 +75,9 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                   # /(100% - mortality in control bottle[%])
                   tabsetPanel(
                     tabPanel("Abott Formula Calculator", fluid=TRUE,
-                             sidebarLayout(
-                               sidebarPanel(
-                                 position="left",
-                                 width=4,
+                             fluidRow(
+                               column(
+                                 4,
                                  tags$h3("Data"),
                                  matrixInput("sample",
                                              value=m,
@@ -78,11 +85,22 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                              cols=list(names=TRUE),
                                              class='numeric')
                                ),
-                               sidebarPanel(
-                                 position="right",
-                                 width=8,
+                               column(
+                                 8,
                                  tags$h3("Resistance Plots"),
-                                 plotOutput("plot")))),
+                                 plotOutput("plot"))),
+                             fluidRow(
+                               column(
+                                 4,
+                                 offset=4,
+                                 selectInput('insecticides', "Insecticides", c(None="", rownames(diagtimes)))
+                                 ),
+                               column(
+                                 4,
+                                 offset=4,
+                                 selectInput('species', "Species", c(None="", colnames(diagtimes)[2:6]))
+                               )
+                             )),
                     tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
                              sidebarLayout(
                                sidebarPanel(
@@ -132,19 +150,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
 # Define server function
 server <- function(session, input, output) {
   library(tidyverse)
-  insecticide_data <- read_table("Type  Conc.  Ae.aegypti  Ae.albopictus Cx.pipiens Cx.quinquefasciatus  Cx.tarsalis
-  Chlorpyrifos  20  45  45  90  45  60
-  Deltamethrin  0.75  30  30  45  60  -
-  Etofenprox  12.5  15  30  15  30  60
-  Fenthion  800  -  -  75  45  45  45
-  Malathion  400  15  30  45  45  45
-  Naled  2.25  30  30  45  45  45
-  Permethrin  43  10  10  30  30  30
-  Prallethrin  0.05  -  -  60  60  -
-  Pyrethrum  15  15  30  45  45  30
-  Sumethrin  20  10  45  30  45  30 ")
-
-  rv <- reactiveValues(data = insecticide_data , orig=insecticide_data)
+  rv <- reactiveValues(data = diagtimes , orig=diagtimes)
 
   observeEvent(input$file1, {
     file <- input$file1
@@ -230,17 +236,15 @@ server <- function(session, input, output) {
                 row_sums[15])
     Time = c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1], sample[12,1], sample[13,1], sample[14,1], sample[15,1])
     df <- data.frame(Time=Time,
-                     Mortality=Mortality_per,
-                     Resistance_Abolished=0.5*Time,
-                     Resistance_Partially_Abolished=Time^0.6,
-                     Resistance_Unaffected=(5*Time)/(Time+1))
-    df <- df %>% pivot_longer(cols=c('Mortality', 'Resistance_Abolished', 'Resistance_Partially_Abolished','Resistance_Unaffected'),
+                     Mortality=Mortality_per)
+    df <- df %>% pivot_longer(cols=c('Mortality'),
                               names_to='resistances',
                               values_to='Percent_Mortality')
     graph1 = ggplot(df, aes(x = Time, y=Percent_Mortality)) +
       geom_line(aes(color=resistances), linetype='twodash') +
-      scale_color_manual(name='Resistance_Types', labels=c('Observed', 'Resistance_Abolished', 'Resistance_Partially_Abolished', 'Resistance_Unaffected'),
-                         values=c('red', 'purple', 'steelblue', 'pink')) +
+      scale_color_manual(name='Resistance_Types', labels=c('Observed'),
+                         values=c('red')) +
+      ylim(0, 100) +
       xlim(Time[1], Time[15])
     #graph1 = plot(time, percent, type = "b", pch = 19, col = "red", xlab = "Time (min)", ylab = "Percent Mortality")
     print(graph1)
