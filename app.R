@@ -88,7 +88,11 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                column(
                                  8,
                                  tags$h3("Resistance Plots"),
-                                 plotOutput("plot"))),
+                                 plotOutput("plot")),
+                               column(
+                                 3,
+                                 offset=10,
+                                 textOutput("recommendation")),
                              fluidRow(
                                column(
                                  4,
@@ -100,6 +104,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                  offset=4,
                                  selectInput('species', "Species", c(None="", colnames(diagtimes)[2:6]))
                                )
+                             )
                              )),
                     tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
                              sidebarLayout(
@@ -150,6 +155,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
 # Define server function
 server <- function(session, input, output) {
   library(tidyverse)
+  library(tibble)
   rv <- reactiveValues(data = diagtimes , orig=diagtimes)
 
   observeEvent(input$file1, {
@@ -216,9 +222,7 @@ server <- function(session, input, output) {
     b4p_dead = col_sums[[4]]
     total_alive = b1m_dead + b2m_dead + b3p_dead + b4p_dead
     row_sums = rowSums(sample[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), c(2,3,4,5)])
-    print(sample[c(1,2,3,4,5,6,7,8,9,10,11,12,13,14,15), c(2,3,4,5)])
-    print(row_sums)
-    Mortality_per = (100/total_alive)*c(
+    Mortality_per <<- (100/total_alive)*c(
                 row_sums[1],
                 row_sums[2],
                 row_sums[3],
@@ -234,7 +238,7 @@ server <- function(session, input, output) {
                 row_sums[13],
                 row_sums[14],
                 row_sums[15])
-    Time = c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1], sample[12,1], sample[13,1], sample[14,1], sample[15,1])
+    Time <- c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1], sample[12,1], sample[13,1], sample[14,1], sample[15,1])
     df <- data.frame(Time=Time,
                      Mortality=Mortality_per)
     df <- df %>% pivot_longer(cols=c('Mortality'),
@@ -248,6 +252,7 @@ server <- function(session, input, output) {
       xlim(Time[1], Time[15])
     #graph1 = plot(time, percent, type = "b", pch = 19, col = "red", xlab = "Time (min)", ylab = "Percent Mortality")
     print(graph1)
+    df_locked <<- df
     })
   
   output$plot = renderPlot({
@@ -291,6 +296,27 @@ server <- function(session, input, output) {
   
   output$contents = renderTable({
     Upload()
+  })
+  
+  Recommendation = reactive({
+    req(input$insecticides)
+    req(input$species)
+    diagtime = diagtimes[input$insecticides, input$species]
+    print(diagtime)
+    #print(df_locked)
+    #if (observed_per > 97){
+    #  print("Susceptible")
+    #}
+    #else if( (observed_per >= 90) || (observed_per <= 96)){
+    #  print("Developing resistance")
+    #}
+    #else{
+    #  print("Resistance")
+    #}
+    })
+  
+  output$recommendation = renderText({
+    Recommendation()
   })
 
 } #server
