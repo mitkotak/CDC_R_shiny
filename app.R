@@ -16,6 +16,9 @@ library(plotly)
 library("shinyMatrix")
 library(DT)
 library(tibble)
+library(shinyscreenshot)
+library(EnvStats)
+
 
 
 ###function for deleting the rows
@@ -78,6 +81,19 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                              fluidRow(
                                column(
                                  4,
+                                 selectInput('insecticides', "Insecticides", c(None="", rownames(diagtimes)))
+                               ),
+                               column(
+                                 4,
+                                 selectInput('species', "Species", c(None="", colnames(diagtimes)[2:6]))
+                               ),
+                               column(
+                                 4,
+                                 textOutput("recommendation"))
+                             ),
+                             fluidRow(
+                               column(
+                                 4,
                                  tags$h3("Data"),
                                  matrixInput("sample",
                                              value=m,
@@ -88,23 +104,18 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                column(
                                  8,
                                  tags$h3("Resistance Plots"),
-                                 plotOutput("plot")),
-                               column(
-                                 3,
-                                 offset=10,
-                                 textOutput("recommendation")),
+                                 plotOutput("plot"))
+                             ),
                              fluidRow(
                                column(
                                  4,
-                                 offset=4,
-                                 selectInput('insecticides', "Insecticides", c(None="", rownames(diagtimes)))
-                                 ),
+                                 actionButton("go", "Take a screenshot")
+                               ),
                                column(
                                  4,
-                                 offset=4,
-                                 selectInput('species', "Species", c(None="", colnames(diagtimes)[2:6]))
+                                 offset=6,
+                                 textOutput("powerlaw")
                                )
-                             )
                              )),
                     tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
                              sidebarLayout(
@@ -241,6 +252,7 @@ server <- function(session, input, output) {
     Time <- c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1], sample[12,1], sample[13,1], sample[14,1], sample[15,1])
     df <- data.frame(Time=Time,
                      Mortality=Mortality_per)
+    df_locked <<- df
     df <- df %>% pivot_longer(cols=c('Mortality'),
                               names_to='resistances',
                               values_to='Percent_Mortality')
@@ -252,7 +264,6 @@ server <- function(session, input, output) {
       xlim(Time[1], Time[15])
     #graph1 = plot(time, percent, type = "b", pch = 19, col = "red", xlab = "Time (min)", ylab = "Percent Mortality")
     print(graph1)
-    df_locked <<- df
     })
   
   output$plot = renderPlot({
@@ -302,21 +313,33 @@ server <- function(session, input, output) {
     req(input$insecticides)
     req(input$species)
     diagtime = diagtimes[input$insecticides, input$species]
-    print(diagtime)
-    #print(df_locked)
-    #if (observed_per > 97){
-    #  print("Susceptible")
-    #}
-    #else if( (observed_per >= 90) || (observed_per <= 96)){
-    #  print("Developing resistance")
-    #}
-    #else{
-    #  print("Resistance")
-    #}
+    observed_per = df_locked[df_locked$Time == diagtime, ]$Mortality
+
+    if (observed_per > 97){
+      print("Resistant State: Susceptible")
+    }
+    else if( (observed_per >= 90) || (observed_per <= 96)){
+      print("Resistant State: Developing resistance")
+    }
+    else{
+      print("Resistant State: Resistance")
+    }
     })
   
   output$recommendation = renderText({
     Recommendation()
+  })
+  
+  output$powerlaw = renderText({
+    req(input$insecticides)
+    req(input$species)
+    print(paste0("Recommended number of Mosquitos is ", ciNormN(half.width=with(df_locked, 
+                                  mean(Mortality)), with(df_locked, 
+                                                         sd(Mortality)), conf.level=0.8)))
+  })
+  
+  observeEvent(input$go, {
+    screenshot()
   })
 
 } #server
