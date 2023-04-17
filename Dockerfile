@@ -1,6 +1,6 @@
 FROM rocker/shiny:latest
 RUN install2.r shinyscreenshot
-RUN install2.r EnvStats
+RUN install2.r samplingbook
 RUN install2.r tidyverse
 RUN install2.r shinyMatrix
 RUN install2.r rsconnect

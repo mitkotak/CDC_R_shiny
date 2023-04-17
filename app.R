@@ -17,7 +17,7 @@ library("shinyMatrix")
 library(DT)
 library(tibble)
 library(shinyscreenshot)
-library(EnvStats)
+library(samplingbook)
 
 
 
@@ -77,7 +77,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                   # correct mortality = ((mortality in test bottles[%] - mortality in control bottle[%]))*100)
                   # /(100% - mortality in control bottle[%])
                   tabsetPanel(
-                    tabPanel("Abott Formula Calculator", fluid=TRUE,
+                    tabPanel("Insecticide Mortality", fluid=TRUE,
                              fluidRow(
                                column(
                                  4,
@@ -89,12 +89,22 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                ),
                                column(
                                  4,
-                                 textOutput("recommendation"))
+                                 htmlOutput("recommendation"))
                              ),
                              fluidRow(
                                column(
                                  4,
-                                 tags$h3("Data"),
+                                 htmlOutput("step1")
+                               ),
+                               column(
+                                 4,
+                                 htmlOutput("step2")
+                               )
+                             ),
+                             fluidRow(
+                               column(
+                                 4,
+                                 span(tags$h3("Data"), style="color:blue; font-family:arial; font-style:italic"),
                                  matrixInput("sample",
                                              value=m,
                                              rows=list(extend= TRUE),
@@ -103,7 +113,7 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                ),
                                column(
                                  8,
-                                 tags$h3("Resistance Plots"),
+                                 span(tags$h3("Resistance Plots"), style="color:blue; font-family:arial; font-style:italic"),
                                  plotOutput("plot"))
                              ),
                              fluidRow(
@@ -112,9 +122,9 @@ ui <- fluidPage(theme= shinytheme("yeti"),
                                  actionButton("go", "Take a screenshot")
                                ),
                                column(
-                                 4,
-                                 offset=6,
-                                 textOutput("powerlaw")
+                                 5,
+                                 offset=3,
+                                 htmlOutput("powerlaw")
                                )
                              )),
                     tabPanel("Insecticide Diagnostic Times", fluid=TRUE,
@@ -252,7 +262,6 @@ server <- function(session, input, output) {
     Time <- c(sample[1,1], sample[2,1], sample[3,1], sample[4,1], sample[5,1], sample[6,1], sample[7,1], sample[8,1], sample[9,1], sample[10,1], sample[11,1], sample[12,1], sample[13,1], sample[14,1], sample[15,1])
     df <- data.frame(Time=Time,
                      Mortality=Mortality_per)
-    df_locked <<- df
     df <- df %>% pivot_longer(cols=c('Mortality'),
                               names_to='resistances',
                               values_to='Percent_Mortality')
@@ -314,32 +323,44 @@ server <- function(session, input, output) {
     req(input$species)
     diagtime = diagtimes[input$insecticides, input$species]
     observed_per = df_locked[df_locked$Time == diagtime, ]$Mortality
+    observed_per_locked <<- observed_per/100
 
     if (observed_per > 97){
-      print("Resistant State: Susceptible")
+      paste("<font color=\"#FF0000\" size=5><b>Resistant State: Susceptible</b></font>")
     }
     else if( (observed_per >= 90) || (observed_per <= 96)){
-      print("Resistant State: Developing resistance")
+      paste("<font color=\"#008000\" size=5><b>Resistant State: Developing resistance</b></font>")
     }
     else{
-      print("Resistant State: Resistance")
-    }
+      paste("<font color=\"#0000ff\" size=5><b>Resistant State: Resistant</b></font>")
+      }
     })
   
   output$recommendation = renderText({
     Recommendation()
   })
   
-  output$powerlaw = renderText({
+  Powerlaw = reactive({
     req(input$insecticides)
     req(input$species)
-    print(paste0("Recommended number of Mosquitos is ", ciNormN(half.width=with(df_locked, 
-                                  mean(Mortality)), with(df_locked, 
-                                                         sd(Mortality)), conf.level=0.8)))
+    n_rec = sample.size.prop(e=observed_per_locked, P=0.5, N=Inf, level=0.95)[[2]]
+    paste("<font color=\"#ff69b4\" size=5><u>Recommended number of Mosquitos is ", n_rec, "</u></font>")
+  })
+  
+  output$powerlaw = renderText({
+    Powerlaw()
   })
   
   observeEvent(input$go, {
     screenshot()
+  })
+  
+  output$step1 = renderText({
+    paste("<font color=\"#ff00ff\"><b>Step 1: Input dead mosquitos for each time period and bottle into the table</b></font>")
+  })
+  
+  output$step2 = renderText({
+    print("<font color=\"#ff00ff\"><b>Step 2: Select species and pesticide from the dropdown</b></font>")
   })
 
 } #server
