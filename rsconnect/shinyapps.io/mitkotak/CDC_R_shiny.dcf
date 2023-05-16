@@ -5,9 +5,10 @@ account: mitkotak
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8066961
-bundleId: 7100865
+bundleId: 7160362
 url: https://mitkotak.shinyapps.io/CDC_R_shiny/
-when: 1681756052.44771
-lastSyncTime: 1681756052.44774
+when: 1682964252.6337
+lastSyncTime: 1682964252.63371
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: Bottle data sheet_20141.xlsx|BottleBioassayAnalysis.R|BottleBioassayEx.csv|BottleBioassayEx2.csv|BottleBioassayEx3.csv|BottleBioassayEx4.csv|BottleBioassayNotes.docx|data/Bottle-data-sheet_20141.csv
